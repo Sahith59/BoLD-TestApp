@@ -106,8 +106,8 @@ function json(res, status, payload) {
   res.end(body);
 }
 
-function monitoredJson(req, res, status, payload) {
-  observeBold(req, payload, status);
+async function monitoredJson(req, res, status, payload) {
+  await observeBold(req, payload, status);
   json(res, status, payload);
 }
 

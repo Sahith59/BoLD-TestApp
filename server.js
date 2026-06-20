@@ -106,8 +106,8 @@ function json(res, status, payload) {
   res.end(body);
 }
 
-async function monitoredJson(req, res, status, payload) {
-  await observeBold(req, payload, status);
+async function monitoredJson(req, res, status, payload, callerId) {
+  await observeBold(req, payload, status, { callerId });
   json(res, status, payload);
 }
 
@@ -421,7 +421,7 @@ async function handleApi(req, res, pathname) {
 
     if (req.method === "GET") {
       // Intentional IDOR/BOLA: authenticated users can fetch invoices they do not own.
-      return monitoredJson(req, res, 200, invoice);
+      return monitoredJson(req, res, 200, invoice, user.id);
     }
 
     if (req.method === "PATCH") {
@@ -430,7 +430,7 @@ async function handleApi(req, res, pathname) {
       if (body.status) invoice.status = body.status;
       if (body.label) invoice.label = body.label;
       if (body.amount !== undefined) invoice.amount = Number(body.amount);
-      return monitoredJson(req, res, 200, invoice);
+      return monitoredJson(req, res, 200, invoice, user.id);
     }
   }
 

@@ -62,6 +62,9 @@ GOOGLE_REDIRECT_URI=http://localhost:3000/auth/google/callback
 GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
 SESSION_SECRET=replace-with-a-long-random-string
+BOLD_INGEST_URL=https://bold-backend-tjmj.onrender.com/api/live/ingest
+BOLD_INGEST_KEY=...
+BOLD_OWNER_FIELDS=ownerId
 ```
 
 This app reads environment variables directly. With modern Node, start it from `.env` like this:
@@ -101,4 +104,20 @@ GOOGLE_REDIRECT_URI=https://YOUR-VERCEL-DOMAIN.vercel.app/auth/google/callback
 GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
 SESSION_SECRET=generate-a-long-random-string
+BOLD_INGEST_URL=https://bold-backend-tjmj.onrender.com/api/live/ingest
+BOLD_INGEST_KEY=...
+BOLD_OWNER_FIELDS=ownerId
 ```
+
+## BoLD Live Monitor Wiring
+
+The vulnerable invoice-by-ID route is wired to BoLD live monitoring through `lib/bold.js`.
+
+Observed routes:
+
+```text
+GET /api/invoices/:id
+PATCH /api/invoices/:id
+```
+
+The monitor sends metadata only: hashed caller identity, method, endpoint shape, object id, status code, and the response's declared `ownerId`. It does not send response bodies, cookies, tokens, or headers.

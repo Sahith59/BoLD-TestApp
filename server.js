@@ -3,6 +3,7 @@ import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
+import { observeBold } from "./lib/bold.js";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const publicDir = join(__dirname, "public");
@@ -103,6 +104,11 @@ function json(res, status, payload) {
     "content-length": Buffer.byteLength(body)
   });
   res.end(body);
+}
+
+function monitoredJson(req, res, status, payload) {
+  observeBold(req, payload, status);
+  json(res, status, payload);
 }
 
 function parseCookies(req) {
@@ -415,7 +421,7 @@ async function handleApi(req, res, pathname) {
 
     if (req.method === "GET") {
       // Intentional IDOR/BOLA: authenticated users can fetch invoices they do not own.
-      return json(res, 200, invoice);
+      return monitoredJson(req, res, 200, invoice);
     }
 
     if (req.method === "PATCH") {
@@ -424,7 +430,7 @@ async function handleApi(req, res, pathname) {
       if (body.status) invoice.status = body.status;
       if (body.label) invoice.label = body.label;
       if (body.amount !== undefined) invoice.amount = Number(body.amount);
-      return json(res, 200, invoice);
+      return monitoredJson(req, res, 200, invoice);
     }
   }
 

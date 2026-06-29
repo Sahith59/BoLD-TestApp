@@ -182,6 +182,10 @@ function requireUser(req, res) {
     json(res, 401, { error: "Please sign in first." });
     return null;
   }
+  // BoLD one-header edge tap: tell the edge who the authenticated caller is, in the SAME namespace
+  // as the object owner field. Set once here (middleware), so any authed response carries it and
+  // BoLD's edge worker can confirm/clear cross-user access precisely. It is an id, never a token.
+  res.setHeader("X-Bold-Caller", user.id);
   return user;
 }
 

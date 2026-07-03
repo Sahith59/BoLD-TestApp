@@ -461,6 +461,33 @@ async function handleApi(req, res, pathname) {
     });
   }
 
+  // Object-scoped admin account view. The privileged (admin-only) function is reading ANY
+  // user's full account record by id. The response body is identical regardless of caller
+  // (no caller-varying fields), so an admin's read and a member's read of the same target
+  // are byte-identical — the exact shape BoLD's BFLA read check confirms against.
+  const adminUserMatch = pathname.match(/^\/api\/admin\/users\/([^/]+)$/);
+  if (req.method === "GET" && adminUserMatch) {
+    const requester = requireUser(req, res);
+    if (!requester) return;
+    const target = users.find((item) => item.id === adminUserMatch[1]);
+    if (!target) return json(res, 404, { error: "User not found." });
+    // Intentional BFLA: this admin-only account view does NOT enforce the admin role.
+    // Any authenticated member reaches an admin function they should not.
+    return json(res, 200, { account: publicUser(target) });
+  }
+
+  // The correctly-secured variant of the same admin function: identical behaviour for an
+  // admin, but a non-admin is rejected with 403. BoLD must clear this one (NOT_VULNERABLE).
+  const adminUserSecuredMatch = pathname.match(/^\/api\/admin\/users-secured\/([^/]+)$/);
+  if (req.method === "GET" && adminUserSecuredMatch) {
+    const requester = requireUser(req, res);
+    if (!requester) return;
+    if (requester.role !== "admin") return json(res, 403, { error: "Admin role required." });
+    const target = users.find((item) => item.id === adminUserSecuredMatch[1]);
+    if (!target) return json(res, 404, { error: "User not found." });
+    return json(res, 200, { account: publicUser(target) });
+  }
+
   return json(res, 404, { error: "API route not found." });
 }
 
